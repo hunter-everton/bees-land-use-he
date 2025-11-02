@@ -1,0 +1,181 @@
+---
+title: "Annotated Bibliography"
+author: "Hunter Everton"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+mainfont: Times New Roman
+bibliography: references.bib
+csl: apa-6th-edition.csl
+---
+
+## @lisboa_assessing_2022 Assessing the Impact of Road and Land Use on Species Diversity of Trees, Shrubs, Herbs and Grasses in the Mountain Landscape in Southern Africa
+
+**Summary**: 
+The researchers studied the diversity of flora in the Moribane Forest Reserve in the Eastern Chimanimani Mountain range, located in central Mozambique.
+They really wanted to assess how the main National Road (EN 216) affected the species diversity of flora in the mountain region. For assessing the land 
+use of the area the researchers separated the area into four major categories: Agriculture, Fallow, Forest, and Road. For measuring diversity of flora 
+the researchers took the alpha and beta diversity measures across the different land use types. They found that there was greater diversity of flora 
+along the main National Road, particularly invasive species were found more abundantly on the roadside. They conclude that this diversity is likely
+caused by changes in soil composition due to the creation of the road.
+
+**Evaluation**: 
+This study is limited for my purposes as they only assess plant diversity in this one mountainous region of Mozambique and so it would be difficult
+to see a direct connection between it and the areas of Oregon that I will be examining. They also say themselves that they had smaller sample sizes
+from the non-road land-use types, therefore there may have been some species diversity that they did not see in the other land-use types.
+
+**Relevance**: 
+This paper provides an example of how to measure land-use in a given area
+and how I can compare species diversity to land-use
+
+## @newbold_global_2020 Global effects of land use on biodiversity differ among functional groups
+
+**Summary**: 
+The researchers of this study sought to understand how land-use affects biodiversity among different groups of animals using data gathered from
+424 different studies. For land-use the researchers used 6 classes: primary vegetation, secondary vegetation, plantation forest, cropland, pasture,
+and urban. These land-use areas were also separated by human use-intensity: minimal, light, and intense. To measure biodiversity the researchers
+took the abundance of different species and measured the difference in abundance of a species between areas with low human use and high human use.
+They found that species abundance was varied across different groups of animals, for example omnivores reacted differently to land-use than carnivores.
+They concluded that overall increases in land-use disproportionately affected organisms of higher trophic levels, which in turn have higher body masses,
+and therefore human land-use does not affect all species evenly.
+
+**Evaluation**:
+This seems to me to be a pretty strong paper and I personally cannot find many limitations in their analysis. Their measure of biodiversity is interesting
+and I don't have the knowledge to know how well it works in comparison to measures like alpha and beta diversity.
+
+**Relevance**:
+I will use this paper as another example of measuring land-use and I think using this idea of human use-intensity could be interesting to my project.
+
+## @souza_assessing_2015 Assessing biodiversity loss due to land use with Life Cycle Assessment: are we there yet?
+
+**Summary**: 
+This paper suggests that Life Cycle Assessment does not account for the entirety of complex ecological systems. They provide multiple limitations of
+the approach and offer solutions that would incorporate the changing landscape and other types of diversity, like functional diversity.
+
+**Evaluation**: 
+I can't really make many judgments on this paper as I don't personally know enough about the topic presented to understand their critiques. I find it
+interesting though and this makes me consider how to best approach the topic of biodiversity given the very complex nature of the topic.
+
+**Relevance**:
+I don't yet know how this paper will be used as I would have to get more into modelling biodiversity before I understand where LCA does and doesn't work.
+
+## @jernakoff_effects_2023 Effects of land use change on the functional diversity and composition of mixed species avian flocks in the high tropical Andes of southern Ecuador
+
+**Summary**:
+The goal of this study was to examine the effects of land-use on the diversity of mixed species bird flocks in southern Ecuador. The researchers 
+examined 3 types of land-use: forests with native tree species, forests regenerating from a history of cattle grazing, and forests with non-native 
+tree species. The researchers walked in four 500 meter transects to observe the bird species that made up each type of land. To measure diversity 
+of mixed species flocks the team used functional descriptors like body mass, bill size, hand-wing size, tail size, and tarsus length. The team found 
+little impacts of land-use on the functional structure of the mixed species flocks.
+
+**Evaluation**:
+The researchers cite the nature of their mixed species flocks as the main limitation of their study. They describe how they may have counted individuals
+multiple times due to the open memberships of Andean bird flocks.
+
+**Relevance**:
+Given the nature of bee colonies there is less overlap with this paper and what I will be examining, as bee colonies don't experience mixing of species.
+This paper does provide an example of how physical traits are used to measure species diversity and that could be applied to my own project.
+
+## @semenchuk_relative_2022 Relative effects of land conversion and land-use intensity on terrestrial vertebrate diversity
+
+**Summary**: 
+This study sought to understand the impact that land-use intensity has on vertebrate biodiversity, as they saw land-use intensity as less studied than
+land-use type. The team used the countryside species-area relationship as their approach for analyzing the effects of land-use on biodiversity. They
+conclude that land use is responsible for the loss of around 15% of species richness from the average across the world. They say that land-use intensity
+plays a substantial role in the erosion of species richness, but it's a complex process that cannot be represented by a single indicator in models.
+
+**Evaluation**:
+The researchers provide limitations that they face when modelling species loss with different sets of intensity indicators. They describe how they
+achieve different results between two sets of intensity indicators and that these differences could be due to data uncertainties, conceptual uncertainties,
+or a lack of knowledge or availability of coherent data products. Besides these uncertainties present this paper still provides a good understanding of
+how land-use intensity is changing biodiversity.
+
+**Relevance**: 
+I would like to use this paper as a background piece for synthesizing my hypothesis that land-use negatively affects the species diversity of bees.
+This paper provides solid evidence of this relationship existing and provides the idea of using some measure of land-use intensity in a potential model.
+
+## @cabernard_biodiversity_2024 Biodiversity impacts of recent land-use change driven by increases in agri-food imports
+
+**Summary**: 
+This paper examined land-use change as a result of increasing agricultural land for the food industry. They found that a major driver of biodiversity
+loss connected to land-use changes has been driven by an increase in consumption in some countries and the supplying of food for consumption by others.
+They note that much of the food supply chain have been exported to tropical countries and thus they have experienced drastically increasing biodiversity
+loss.
+
+**Evaluation**:
+The researchers note that their paper does not account for deforestation and the rising forestry industry. They also say that their dataset has some
+uncertainty given the fact that it extrapolates prior data, from 1995 to 2021, to 2022. They then discuss how future research should create/include data
+from more recent years in order to account for the uncertainty in their dataset.
+
+**Relevance**:
+This paper gives historical context for certain areas of the world having more biodiversity loss and land-use impacts. This gives context to my project
+as we would expect Oregon to have less land-use changes than say tropical countries across the world.
+
+## @oldham_contrasting_2025 Contrasting effects of land-use and local disturbance on plant and pollinator communities in wetlands
+
+**Summary**:
+This paper examined the effects of land-use on plant and pollinator communities of wetlands in Tennessee. They separated land-use into the types: 
+agricultural, seminatural, urban, and water. The team first measured 6 sites in Eastern Tennessee in 2020 and then 9 sites in the Oak Ridge Reservation 
+in 2021. They found that sites affected more by land-use changes were associated with less diversity, abundance, and species composition of both flowers
+and pollinators. This was either directly due to the land-use or through other measures affected by land-use like water quality or temperature.
+
+**Evaluation**:
+The researchers themselves don't specify any limitations and I myself can't say I see any limits with this study.
+
+**Relevance**:
+This study is important for directly addressing the question that I want to answer and it provides evidence of this relationship having a negative
+correlation.
+
+## @tsang_land_2025 Land Use Change Consistently Reduces α- But Not β- and γ-Diversity of Bees
+
+**Summary**:
+This study sought to examine the effects of land-use change on the alpha, beta, and gamma diversity of bees. For land-use types the researchers split
+them into 3 categories: natural habitat, agricultural habitat, and urban habitat. They found that taxonomic alpha diversity decreased on average by
+15.8% in agricultural habitats and 19.6% in urban habitats, both compared to natural habitats. They found that the average taxonomic beta diversity was
+1.75 in natural habitats with a 6.4% decline in agricultural habitats and an 8.8% increase in urban habitats. For gamma diversity they found that it was
+on average 25.2% lower in agricultural habitats and the difference in urban habitats was not statistically significant. They conclude, like the title
+suggests, that land-use change reduces alpha but not beta and gamma diversity of bees.
+
+**Evaluation**: 
+The authors present limitations of their dataset in section 1 of the supplemental materials, but offer no limitations of their methods or analysis.
+I also don't personally see any glaring issues with the paper.
+
+**Relevance**:
+Like the paper before, this paper is important for providing an answer to the question of my project and will be used to give evidence towards an
+argument.
+
+## @millard_global_2021 Global effects of land-use intensity on local pollinator biodiversity
+
+**Summary**:
+The researchers of this paper sought to synthesize the results of hundreds of studies related to the effects of land-use intensity on pollinator biodiversity.
+They found 3974 abstracts that contained 545 genera that they were confident were pollinators. From their synthesis they found that increasing land-use
+intensity significantly decreased biodiversity of pollinators. For land-use types they found that across almost all land-use types that lower intensity
+land-use types had greater species diversity compared to their primary vegetation baseline. They concluded with this that land-use intensity had a 
+greater impact on pollinator diversity than land-use type.
+
+**Evaluation**:
+The researchers give 8 limitations of their study related to how their dataset was biased towards non-tropical areas, the explanatory power of their
+analysis was low, and that evidence for one species can't be generalized to the whole species.
+
+**Relevance**:
+This provides a very interesting insight into what I was planning to do for my project as the data I have for land-use is exclusively done by land-use
+type and not intensity. This paper could work with my project by showing what I may miss with my data and analysis.
+
+## @grab_agriculturally_2019 Agriculturally dominated landscapes reduce bee phylogenetic diversity and pollination services
+
+**Summary**: 
+The researchers of this paper looked at the relationship between agricultural land-use change and the phylogenetic diversity of pollinators. They used
+pollinator community data from 27 apple orchards across 10 years. They found that species loss due to agricultural land-use is not random and that
+specific branches would go extinct, resulting in branches with very closely related bee species. They also found that with the change in phylogenetic
+diversity there was an indirect impact on pollination services and crop production. They conclude by arguing that practices which only analyze success 
+through the number of species saved may fail to protect the full diversity of life like phylogenetic diversity.
+
+**Evaluation**:
+The authors do not present any limitations and I do not see any glaring issues with the paper.
+
+**Relevance**:
+Similarly to the last few papers this paper is directly related to my research question and provides insight into how agricultural land-use specifically
+impacts bee diversity. This is something that I will be keeping in mind as I go about my analysis.
+
+# References
