@@ -1,0 +1,80 @@
+---
+Title: "Cleaning Data"
+Author: Hunter Everton
+---
+
+# Cleaning Data
+
+## Cleaning OBA dataset
+
+Load the necessary libraries
+```{r load_libraries, message = FALSE}
+library(here)
+library(tidyverse)
+```
+
+Load the datasets
+```{r}
+oba_data <- read_csv(here("data", "raw_data", "OBA_2018-2024.csv"))
+land_use <- read_csv(here("data", "raw_data", "nhgis_place2022_tl2022_nlcd2021.csv"))
+or_places <- read_delim(here("data", "raw_data", "or_places.txt"), delim = "|")
+
+head(oba_data)
+head(land_use)
+head(or_places)
+```
+
+First I'll work on the land use data as that requires more cleaning. The land use dataset contains all cities and incorporated places in the U.S.,
+so first let's subset the data to just those from Oregon. The dataset from NHGIS uses FIPS codes in its GISJOIN variable; using the table of FIPS
+codes for Oregon, which can be found [here](https://www2.census.gov/geo/docs/reference/codes2020/place/st41_or_place2020.txt), I will subset the
+GISJOIN variable to the Oregon FIPS codes.
+
+```{r}
+# Find the row where the Oregon places start
+or_start <- which(land_use$GISJOIN == "G41000275")
+# Find the end of the Oregon places
+or_end <- which(land_use$GISJOIN == "G41084600")
+
+# Subset the land use data to the Oregon rows
+land_use <- land_use[or_start : or_end, ]
+
+# Check that the land use data and place names have the same number of places
+nrow(land_use) == nrow(or_places)
+```
+
+Now that I have the land use dataset subset to just the Oregon places I want to add the place names to the land use dataset. I then want to join the
+datasets on the GISJOIN variable.
+
+```{r}
+# Add the GISJOIN column structure from the land use data to the Oregon places dataset
+or_places$GISJOIN <- paste("G", or_places$STATEFP, "0", or_places$PLACEFP, sep = "")
+
+# Make sure they are the same, this should be the same as the number of rows in either dataset
+sum(or_places$GISJOIN == land_use$GISJOIN) == nrow(land_use)
+
+# Join on GISJOIN variable and select columns needed
+land_use <- land_use %>%
+    left_join(or_places, by = "GISJOIN") %>%
+    select("PLACENAME", "COUNTIES", starts_with("PROP"))
+
+colnames(land_use) <- c("place_name",
+                        "county",
+                        "prop_open_water",
+                        "prop_perennial_ice_snow",
+                        "prop_developed_open_space",
+                        "prop_developed_low_intensity",
+                        "prop_developed_med_intensity",
+                        "prop_developed_high_intensity",
+                        "prop_barren_land",
+                        "prop_deciduous",
+                        "prop_evergreen",
+                        "prop_mixed_forest",
+                        "prop_shrub_scrub",
+                        "prop_grassland_herbaceous",
+                        "prop_pasture_hay",
+                        "prop_cultivated_crops",
+                        "prop_woody_wetlands",
+                        "prop_emergent_herbaceous_wetlands")
+
+head(land_use)
+```
