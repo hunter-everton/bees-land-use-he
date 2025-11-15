@@ -1,0 +1,81 @@
+---
+title: "Literature Review and Workflow Plan"
+author: "Hunter Everton"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+mainfont: Times New Roman
+bibliography: ../bibliography/references.bib
+csl: ../bibliography/apa-6th-edition.csl
+urlcolor: blue
+---
+
+# Effects of Land Use in Census Places on Pollinator Diversity
+
+## Literature review
+
+### Introduction
+The goal of this paper is to assess the effects of human land use in Oregon's Cities and Census designated places on local pollinator diversity.
+The effects of land use on pollinator diversity has been widely studied across different contexts around the world. In a large-scale review of 
+studies researchers have found positive correlations between land use intensity and reductions in alpha-diversity [@tsang_land_2025]. Another 
+review also saw a positive correlation between land use intensity and overall reductions in pollinator diversity, though their results
+found little correlation between land use type and pollinator diversity [@millard_global_2021].
+
+Other studies have looked at the effect of land use on the biodiversity of other flora and fauna, with results being generally similar to those
+that assessed pollinators only [@lisboa_assessing_2022; @newbold_global_2020; @semenchuk_relative_2022]. Others have found more mixed results
+across different contexts, seeing more biodiversity loss in certain areas or in some animal species over others [@newbold_global_2020;
+@jernakoff_effects_2023; @cabernard_biodiversity_2024]. These other studies show that generalizing the effects of land use on other animal species
+to animal biodiversity as a whole could be a mistake and lead to different results than those seen among pollinators specifically.
+
+The data that can answer this question exists in the form of the annual surveys carried out by the National Land Cover Database (NLCD). These surveys
+are formatted as large raster files that show the land cover of the United States. This data can be obtained as a raster of the whole United States
+through the Multi-Resolution Land Characteristics Consortium (MRLC) or can be narrowed to specific areas of the country using the United States
+Geological Survey's EarthExplorer tool.
+
+### Purpose
+The data I used to test my hypotheses comes from the Oregon Bee Atlas (OBA) for bee diversity, and the National Historical Geographic Information
+System (NHGIS). The NHGIS gathered data from the NLCD and summarized it across US census places. The data that I ultimately used is the 2022 census 
+place dataset as out of those available from the NHGIS this one was the most fine-grained, detailed dataset to pair with the OBA dataset. I was limited
+by my lack of knowledge in using spatial data earlier in the course of making this project, otherwise I would have used the more fine-grained data 
+available through the MRLC. Given this lack of knowledge and the limited time remaining since gaining it, I have used data that is less detailed but 
+that I have found easier to work with.
+
+### Hypotheses
+I predict that census places with more land use intensity will have lower levels of pollinator diversity because that would be in line with other
+research on this problem. For this project the null hypothesis will be that there is no difference in pollinator diversity between areas with lower
+and higher land use. The alternative hypothesis will be the before mentioned hypothesis, that areas with higher land use will have lower biodiversity.
+
+## Datasets
+- NHGIS Land Cover Summary (https://www.nhgis.org/environmental-summaries): Collected by the NLCD, summarized by the NHGIS into different census 
+categories (counties, census tracts, places, county subdivisions).
+- OBA data: I plan to transform the OBA data through subsetting the data to combine with the land use dataset. Since the OBA data is individual
+collection records across various census places, this data will have to be transformed such that the biodiversity of each census place in the land
+use data is found in the OBA data.
+
+## Workflow Plan
+1) Cleaning & validation: As far as I know the land use data will not need to be cleaned in any way but if any of the places in the land use data
+are not present in the OBA data then those will need to be removed. I am unsure about whether the OBA data will need to be cleaned but if it does
+then that will be shown in the "clean_data" file in the analysis folder and mentioned in the paper.
+
+2) Aggregations/derivations: The land use data will need to be adjusted so that city and place names are shown rather than FIPS codes. This can be
+done by comparing the codes to those in the list of FIPS codes for Oregon census places. This list of names is found in the data folder and can be
+found on the Census' website ([link](https://www.census.gov/library/reference/code-lists/ansi.html)). The adjustments for the OBA data is mentioned 
+in the "Datasets" section.
+
+3) Functions/loops (inputs → outputs): I will need to write a function for computing diversity once I decide how I will measure diversity. I
+can't think of any loops I will have to write to complete the project.
+
+4) Statistical test + programmatic implementation: For testing the hypothesis I will use bootstrapping to draw random samples from the data and use
+a linear regression to test the relationship between land use and biodiversity. This will require that I create some continuous measure of land use.
+Since the data I have presents land use in proportions, I will be able to use this for designing my measure of land use.
+
+5) Planned visualizations/tables: I plan to visualize the relationship between the two variables directly, as well as a map of oregon places and 
+their respective measurements of biodiversity.
+
+6) Risks & mitigations: There is a risk in combining the OBA data into census places as this may not get all of the detail in the data. I plan to
+mitigate this by analyzing the data within each place and making assessments around how well the data is being captured by grouping it this way.
+If outliers are of major concern then handling those will be addressed in the paper.
+
+
+# References
