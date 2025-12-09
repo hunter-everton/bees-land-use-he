@@ -5,12 +5,12 @@ Author: Hunter Everton
 
 # Cleaning Data
 
-## Cleaning OBA dataset
-
 Load the necessary libraries
 ```{r load_libraries, message = FALSE}
 library(here)
 library(tidyverse)
+library(stringr)
+library(vegan)
 ```
 
 Load the datasets
@@ -23,6 +23,8 @@ head(oba_data)
 head(land_use)
 head(or_places)
 ```
+
+## Cleaning Land Use Data
 
 First I'll work on the land use data as that requires more cleaning. The land use dataset contains all cities and incorporated places in the U.S.,
 so first let's subset the data to just those from Oregon. The dataset from NHGIS uses FIPS codes in its GISJOIN variable; using the table of FIPS
@@ -57,6 +59,7 @@ land_use <- land_use %>%
     left_join(or_places, by = "GISJOIN") %>%
     select("PLACENAME", "COUNTIES", starts_with("PROP"))
 
+# Rename all columns
 colnames(land_use) <- c("place_name",
                         "county",
                         "prop_open_water",
@@ -77,4 +80,112 @@ colnames(land_use) <- c("place_name",
                         "prop_emergent_herbaceous_wetlands")
 
 head(land_use)
+```
+
+The place names end in either "city" or "CDP", and the places across multiple counties are denoted with the separator "~~~". These values should
+be removed to merge with the oba data.
+
+```{r}
+land_use$place_name <- str_remove(land_use$place_name, "\\s(city|CDP)$")
+land_use$county <- str_remove(land_use$county, "~~~.*")
+land_use$county <- str_remove(land_use$county, "\\s(County)")
+```
+
+The land use data is now cleaned and ready for merging. Next I will clean the oba data.
+
+## Cleaning OBA Data
+
+```{r}
+# Subset to Oregon data
+oba_data_oregon <- oba_data[oba_data$stateProvince == "OR", ]
+
+# Subset to places in the land use dataset
+oba_data_places <- oba_data_oregon[oba_data_oregon$locality %in% land_use$place_name, ]
+
+# Select needed columns
+oba_data_subset <- oba_data_places %>%
+    select(locality,
+           genus,
+           specificEpithet,
+           decimalLatitude,
+           decimalLongitude) %>%
+    filter(!is.na(specificEpithet) & !is.na(locality)) %>%
+    mutate(species = paste(genus, specificEpithet)) %>%
+    select(-genus, -specificEpithet)
+
+# Sort the data by locality in alphabetical order
+oba_data_subset <- arrange(oba_data_subset, locality)
+
+# Count the species for each locality
+# Pivot the data to have each species in a column
+oba_data_counts <- oba_data_subset %>%
+    count(locality, species) %>%
+    pivot_wider(names_from = species,
+                values_from = n)
+
+# Turn the data into a matrix for calculating diversity
+oba_matrix <- as.matrix(oba_data_counts[, -1])
+
+rownames(oba_matrix) <- unique(oba_data_subset$locality)
+
+dim(oba_matrix)
+```
+
+Now I have a matrix where each row represents a location in both the place and OBA datasets and each column represents a species of bee in the OBA dataset.
+Next I will compute diversity metrics of this matrix and add start creating the final dataset.
+
+## Creating the final dataset
+
+```{r}
+# Get unique species for each locality
+oba_data_unique <- oba_data_subset %>%
+    group_by(locality) %>%
+    summarize(num_unique = n_distinct(species))
+
+# Change NA values to be 0
+oba_matrix[is.na(oba_matrix)] <- 0
+
+# Find the shannon diversity index for each locality
+shannon <- diversity(oba_matrix, index = "shannon")
+
+# Find the simpson diversity index
+simpson <- diversity(oba_matrix, index = "simpson")
+
+# Find the inverse simpson diversity index
+inv_simpson <- diversity(oba_matrix, index = "invsimpson")
+```
+
+```{r}
+# Set the columns of the final dataset to the diversity indices gotten earlier
+# and the place names from the oba dataset
+final_dataset_template <- data.frame(
+    place_name = unique(oba_data_subset$locality),
+    num_unique = oba_data_unique$num_unique,
+    shannon = shannon,
+    simpson = simpson,
+    inv_simpson = inv_simpson
+)
+
+# Reset the row names to default
+rownames(final_dataset_template) <- NULL
+
+# Add coordinates from oba data to final dataset
+add_coordinates <- left_join(final_dataset_template,
+                             select(oba_data_subset,
+                                    locality,
+                                    decimalLatitude,
+                                    decimalLongitude),
+                             by = join_by(place_name == locality)) %>%
+                   group_by(place_name, num_unique, shannon, simpson, inv_simpson) %>%
+                   summarize(latitude = list(decimalLatitude),
+                             longitude = list(decimalLongitude),
+                             .groups = "drop")
+
+# Join the dataset with coordinates to the land use dataset
+final_dataset <- left_join(add_coordinates,
+                           land_use,
+                           by = join_by(place_name))
+
+# Write the dataset to the cleaned data folder as an RData file
+saveRDS(final_dataset, file = here("data", "cleaned_data", "oba_land_use.rds"))
 ```

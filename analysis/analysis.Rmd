@@ -1,0 +1,145 @@
+---
+Title: "Data Analysis"
+Author: Hunter Everton
+---
+
+## Analyzing the dataset
+
+Load the necessary libraries
+```{r load_libraries, message = FALSE}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(terra)
+```
+
+Load the dataset
+
+```{r, message = FALSE}
+oba_land_use <- readRDS(file = here("data", "cleaned_data", "oba_land_use.rds"))
+
+head(oba_land_use)
+```
+
+We can see that the final combined dataset has columns for the longitude and latitude of each bee record, each diversity index and the proportion of 
+each land type. For making analysis easier I will combine the undeveloped land types into one measure of undeveloped land and the developed land intensities
+into one developed land proportion.
+
+```{r}
+oba_land_use_mutated <- oba_land_use %>%
+    mutate(prop_undeveloped = prop_open_water +
+                              prop_perennial_ice_snow +
+                              prop_barren_land +
+                              prop_deciduous +
+                              prop_evergreen +
+                              prop_mixed_forest +
+                              prop_shrub_scrub +
+                              prop_grassland_herbaceous +
+                              prop_pasture_hay +
+                              prop_cultivated_crops +
+                              prop_woody_wetlands,
+           prop_developed = prop_developed_open_space +
+                            prop_developed_low_intensity +
+                            prop_developed_med_intensity +
+                            prop_developed_high_intensity) %>%
+    select(place_name, num_unique, shannon, simpson, inv_simpson,
+           prop_developed, prop_undeveloped,
+           longitude, latitude)
+```
+
+## Summary Statistics
+
+```{r}
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = shannon), color = "white", fill = "black")
+
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = simpson), color = "white", fill = "black")
+
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = inv_simpson), color = "white", fill = "black")
+
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = prop_developed),
+                   color = "white", fill = "black") +
+    labs(x = "proportion developed land")
+```
+
+## Regression Analysis
+
+```{r}
+shannon_plot <- ggplot(oba_land_use_mutated, aes(x = prop_developed, y = shannon)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = "Shannon Diversity", x = "proportion developed land", y = "shannon diversity index") +
+    theme_bw() +
+    theme(axis.text = element_text(size = 17),
+          text = element_text(size = 17))
+
+ggsave(here("analysis", "figures", "shannon.png"), shannon_plot, width = 8, height = 8)
+
+simpson_plot <- ggplot(oba_land_use_mutated, aes(x = prop_developed, y = simpson)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = "Simpson Diversity", x = "proportion developed land", y = "simpson diversity index") +
+    theme_bw() +
+    theme(axis.text = element_text(size = 17),
+          text = element_text(size = 17))
+
+ggsave(here("analysis", "figures", "simpson.png"), simpson_plot, width = 8, height = 8)
+```
+
+```{r}
+m_shannon <- lm(shannon ~ prop_developed, data = oba_land_use_mutated)
+summary(m_shannon)
+
+m_simpson <- lm(simpson ~ prop_developed, data = oba_land_use_mutated)
+summary(m_simpson)
+```
+
+## Spatial Maps
+
+```{r}
+or <- map_data("state", "oregon") %>%
+    select(lon = long, lat, group, id = subregion)
+
+oba_land_use_spatial <- oba_land_use_mutated %>%
+    unnest(cols = c(longitude, latitude)) %>%
+    st_as_sf(coords = c("longitude", "latitude"),
+             crs = crs("EPSG:4326"))
+
+developed_spatial <- ggplot() +
+    geom_polygon(data = or, aes(lon, lat, group = group), fill = "white", color = "black") +
+    geom_sf(data = oba_land_use_spatial, aes(color = prop_developed)) +
+    scale_color_viridis_c() +
+    labs(x = "", y = "", color = "proportion developed land") +
+    theme_void() +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.title = element_text(size = 17),
+          legend.text = element_text(size = 11, angle = -45),
+          legend.box.margin = margin(-10, -10, -10, -10),
+          legend.position = "bottom")
+
+ggsave(here("analysis", "figures", "developed_spatial.png"), developed_spatial)
+
+num_unique_spatial <- ggplot() +
+    geom_polygon(data = or, aes(lon, lat, group = group), fill = "white", color = "black") +
+    geom_sf(data = oba_land_use_spatial, aes(color = num_unique)) +
+    scale_color_viridis_c() +
+    labs(x = "", y = "", color = "number of unique species") +
+    theme_void() +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.title = element_text(size = 17),
+          legend.text = element_text(size = 11),
+          legend.box.margin = margin(-10, -10, -10, -10),
+          legend.position = "bottom")
+
+ggsave(here("analysis", "figures", "num_unique_spatial.png"), num_unique_spatial)
+```
