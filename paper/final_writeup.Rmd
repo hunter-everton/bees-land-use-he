@@ -1,0 +1,327 @@
+---
+title: "Effects of Land Use in Census Places on Pollinator Diversity"
+author: "Hunter Everton"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+mainfont: Times New Roman
+bibliography: ../bibliography/references.bib
+csl: ../bibliography/apa-6th-edition.csl
+urlcolor: blue
+---
+
+# Introduction
+
+The goal of this project was to assess the effects of human land use in Oregon's cities and Census designated places on local pollinator diversity.
+The effects of land use on pollinator diversity has been widely studied across different contexts around the world. In a large-scale review of 
+studies researchers have found positive correlations between land use intensity and reductions in alpha-diversity [@tsang_land_2025]. Another 
+review also saw a positive correlation between land use intensity and overall reductions in pollinator diversity, though their results
+found little correlation between land use type (i.e. land used for residential purposes vs. for industrial purposes) and pollinator diversity 
+[@millard_global_2021].
+
+While the effects of land use on bee diversity are well documented, most pollinator studies measure landscape context using ecological or remotely
+sensed units, such as fixed-radius buffers, land-cover categories, or habitat suitability indices. Parallel work in urban ecology has shown that
+neighborhood socioeconomic conditions can influence pollinator habitat through gardening practices, greenspace management, and vegetation structure,
+but these studies are largely limited to individual metropolitan areas. Importantly, U.S. Census places—key units for describing settlement patterns,
+governance, and human activity—have not been systematically used to analyze pollinator biodiversity, despite their relevance for conservation
+implementation and planning. No statewide studies have integrated high-resolution pollinator surveys (e.g., the Oregon Bee Atlas) with census-place
+boundaries and land-use characteristics to evaluate how human-defined spaces structure biological diversity. This leaves a significant knowledge gap
+concerning how pollinator species richness is distributed across towns and cities and how those patterns relate to land use in ways that are meaningful
+for policy and community conservation efforts.
+
+Other studies have looked at the effect of land use on the biodiversity of other flora and fauna, with results being generally similar to those
+that assessed pollinators only [@lisboa_assessing_2022; @newbold_global_2020; @semenchuk_relative_2022]. Others have found more mixed results
+across different contexts, seeing more biodiversity loss in certain areas or in some animal species over others [@newbold_global_2020;
+@jernakoff_effects_2023; @cabernard_biodiversity_2024]. These other studies show that generalizing the effects of land use on other animal species
+to animal biodiversity as a whole could be a mistake and lead to different results than those seen among pollinators specifically.
+
+# Data
+
+- NHGIS Land Cover Summary (https://www.nhgis.org/environmental-summaries): Collected by the NLCD, summarized by the NHGIS into different census 
+categories (counties, census tracts, places, county subdivisions).
+- A text file of Oregon census places, their FIPS codes and their place names. The NHGIS data does not have place names only codes, therefore this
+will be useful for adding place names to the land use data.
+- OBA data: I plan to transform the OBA data through subsetting the data to combine with the land use dataset. Since the OBA data is individual
+collection records across various census places, this data will have to be transformed such that the biodiversity of each census place in the land
+use data is found in the OBA data.
+
+Skills represented:
+1. Regular expressions
+2. Table manipulation
+3. Data visualization
+4. Joining datasets
+
+## Cleaning the Data
+
+Load the necessary libraries
+```{r load_libraries, message = FALSE}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(terra)
+library(stringr)
+library(vegan)
+library(modelsummary)
+```
+
+Load the datasets
+```{r, message = FALSE}
+oba_data <- read_csv(here("data", "raw_data", "OBA_2018-2024.csv"))
+land_use <- read_csv(here("data", "raw_data", "nhgis_place2022_tl2022_nlcd2021.csv"))
+or_places <- read_delim(here("data", "raw_data", "or_places.txt"), delim = "|")
+```
+
+### Cleaning Land Use Data
+
+First I'll work on the land use data as that requires more cleaning. The land use dataset contains all cities and incorporated places in the U.S.,
+so first let's subset the data to just those from Oregon. The dataset from NHGIS uses FIPS codes in its GISJOIN variable; using the table of FIPS
+codes for Oregon, which can be found [here](https://www2.census.gov/geo/docs/reference/codes2020/place/st41_or_place2020.txt), I will subset the
+GISJOIN variable to the Oregon FIPS codes.
+
+```{r warning = FALSE}
+# Find the row where the Oregon places start
+or_start <- which(land_use$GISJOIN == "G41000275")
+# Find the end of the Oregon places
+or_end <- which(land_use$GISJOIN == "G41084600")
+
+# Subset the land use data to the Oregon rows
+land_use <- land_use[or_start : or_end, ]
+
+# Check that the land use data and place names have the same number of places
+nrow(land_use) == nrow(or_places)
+```
+
+Now that I have the land use dataset subset to just the Oregon places I want to add the place names to the land use dataset. I then want to join the
+datasets on the GISJOIN variable.
+
+```{r warning = FALSE}
+# Add the GISJOIN column structure from the land use data to the Oregon places dataset
+or_places$GISJOIN <- paste("G", or_places$STATEFP, "0", or_places$PLACEFP, sep = "")
+
+# Make sure they are the same, this should be the same as the number of rows in either dataset
+sum(or_places$GISJOIN == land_use$GISJOIN) == nrow(land_use)
+
+# Join on GISJOIN variable and select columns needed
+land_use <- land_use %>%
+    left_join(or_places, by = "GISJOIN") %>%
+    select("PLACENAME", "COUNTIES", starts_with("PROP"))
+
+# Rename all columns
+colnames(land_use) <- c("place_name",
+                        "county",
+                        "prop_open_water",
+                        "prop_perennial_ice_snow",
+                        "prop_developed_open_space",
+                        "prop_developed_low_intensity",
+                        "prop_developed_med_intensity",
+                        "prop_developed_high_intensity",
+                        "prop_barren_land",
+                        "prop_deciduous",
+                        "prop_evergreen",
+                        "prop_mixed_forest",
+                        "prop_shrub_scrub",
+                        "prop_grassland_herbaceous",
+                        "prop_pasture_hay",
+                        "prop_cultivated_crops",
+                        "prop_woody_wetlands",
+                        "prop_emergent_herbaceous_wetlands")
+```
+
+The place names end in either "city" or "CDP", and the places across multiple counties are denoted with the separator "~~~". These values should
+be removed to merge with the oba data.
+
+```{r warning = FALSE}
+land_use$place_name <- str_remove(land_use$place_name, "\\s(city|CDP)$")
+land_use$county <- str_remove(land_use$county, "~~~.*")
+land_use$county <- str_remove(land_use$county, "\\s(County)")
+```
+
+The land use data is now cleaned and ready for merging. Next I will clean the oba data.
+
+### Cleaning OBA Data
+
+```{r warning = FALSE}
+# Subset to Oregon data
+oba_data_oregon <- oba_data[oba_data$stateProvince == "OR", ]
+
+# Subset to places in the land use dataset
+oba_data_places <- oba_data_oregon[oba_data_oregon$locality %in% land_use$place_name, ]
+
+# Select needed columns
+oba_data_subset <- oba_data_places %>%
+    select(locality,
+           genus,
+           specificEpithet,
+           decimalLatitude,
+           decimalLongitude) %>%
+    filter(!is.na(specificEpithet) & !is.na(locality)) %>%
+    mutate(species = paste(genus, specificEpithet)) %>%
+    select(-genus, -specificEpithet)
+
+# Sort the data by locality in alphabetical order
+oba_data_subset <- arrange(oba_data_subset, locality)
+
+# Count the species for each locality
+# Pivot the data to have each species in a column
+oba_data_counts <- oba_data_subset %>%
+    count(locality, species) %>%
+    pivot_wider(names_from = species,
+                values_from = n)
+
+# Turn the data into a matrix for calculating diversity
+oba_matrix <- as.matrix(oba_data_counts[, -1])
+
+rownames(oba_matrix) <- unique(oba_data_subset$locality)
+
+dim(oba_matrix)
+```
+
+Now I have a matrix where each row represents a location in both the place and OBA datasets and each column represents a species of bee in the OBA dataset.
+Next I will compute diversity metrics of this matrix and add start creating the final dataset.
+
+### Creating the final dataset
+
+```{r warning = FALSE}
+# Get unique species for each locality
+oba_data_unique <- oba_data_subset %>%
+    group_by(locality) %>%
+    summarize(num_unique = n_distinct(species))
+
+# Change NA values to be 0
+oba_matrix[is.na(oba_matrix)] <- 0
+
+# Find the shannon diversity index for each locality
+shannon <- diversity(oba_matrix, index = "shannon")
+
+# Find the simpson diversity index
+simpson <- diversity(oba_matrix, index = "simpson")
+```
+
+For creating the final dataset I want to add coordinates from the oba data so that I can create spatial plots from the data.
+
+```{r warning = FALSE}
+# Set the columns of the final dataset to the diversity indices gotten earlier
+# and the place names from the oba dataset
+final_dataset_template <- data.frame(
+    place_name = unique(oba_data_subset$locality),
+    num_unique = oba_data_unique$num_unique,
+    shannon = shannon,
+    simpson = simpson
+)
+
+# Reset the row names to default
+rownames(final_dataset_template) <- NULL
+
+# Add coordinates from oba data to final dataset
+add_coordinates <- left_join(final_dataset_template,
+                             select(oba_data_subset,
+                                    locality,
+                                    decimalLatitude,
+                                    decimalLongitude),
+                             by = join_by(place_name == locality)) %>%
+                   group_by(place_name, num_unique, shannon, simpson) %>%
+                   summarize(latitude = list(decimalLatitude),
+                             longitude = list(decimalLongitude),
+                             .groups = "drop")
+
+# Join the dataset with coordinates to the land use dataset
+oba_land_use <- left_join(add_coordinates,
+                          land_use,
+                          by = join_by(place_name))
+```
+
+# Analysis
+
+We can see that the final combined dataset has columns for the longitude and latitude of each bee record, each diversity index and the proportion of 
+each land type. For making analysis easier I will combine the undeveloped land types into one measure of undeveloped land and the developed land intensities
+into one developed land proportion.
+
+```{r warning = FALSE}
+oba_land_use_mutated <- oba_land_use %>%
+    mutate(prop_undeveloped = prop_open_water +
+                              prop_perennial_ice_snow +
+                              prop_barren_land +
+                              prop_deciduous +
+                              prop_evergreen +
+                              prop_mixed_forest +
+                              prop_shrub_scrub +
+                              prop_grassland_herbaceous +
+                              prop_pasture_hay +
+                              prop_cultivated_crops +
+                              prop_woody_wetlands,
+           prop_developed = prop_developed_open_space +
+                            prop_developed_low_intensity +
+                            prop_developed_med_intensity +
+                            prop_developed_high_intensity) %>%
+    select(place_name, num_unique, shannon, simpson,
+           prop_developed, prop_undeveloped,
+           longitude, latitude)
+
+head(oba_land_use_mutated)
+```
+
+## Summary Statistics
+
+```{r warning = FALSE}
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = shannon), color = "white", fill = "black")
+
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = simpson), color = "white", fill = "black")
+
+ggplot(oba_land_use_mutated) +
+    geom_histogram(aes(x = prop_developed),
+                   color = "white", fill = "black") +
+    labs(x = "proportion developed land")
+```
+
+Looking at the distribution of the statistics in the final dataset we can see that the shannon index is roughly normally distributed, the simpson
+index is right skewed, and the proportion of developed land is roughly uniformly distributed. From the summary statistics themselves we can't see any
+clear relationship between the proportion of developed land and either the shannon or simpson indices. This seems to be due to the fact that the proportion
+of developed land is almost uniform across census places.
+
+## Linear Regression
+
+```{r warning = FALSE}
+m_shannon <- lm(shannon ~ prop_developed, data = oba_land_use_mutated)
+
+m_simpson <- lm(simpson ~ prop_developed, data = oba_land_use_mutated)
+
+ggplot(oba_land_use_mutated, aes(x = prop_developed, y = shannon)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = "Shannon Diversity", x = "proportion developed land", y = "shannon diversity index") +
+    theme_bw()
+
+ggplot(oba_land_use_mutated, aes(x = prop_developed, y = simpson)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = "Simpson Diversity", x = "proportion developed land", y = "simpson diversity index") +
+    theme_bw()
+
+modelsummary(list("shannon" = m_shannon,
+                  "simpson" = m_simpson),
+             statistic = "p = {p.value}",
+             output = "gt",
+             gof_map = c("nobs", "r.squared"))
+```
+
+The linear regression models show the lack of relationship between the variables that I had considered after looking at the distributions of the variables.
+We can see that the p-value for the relationship between the proportion of developed land and the shannon index is 0.207, and the p-value for the simpson index
+is 0.463. These suggest no statistical significance for either linear model, which goes against the significant results seen in other studies of biodiversity
+and land use intensity [@millard_global_2021; @lisboa_assessing_2022; @newbold_global_2020; @semenchuk_relative_2022]. The reasons for this are not entirely
+clear and some ideas will be considered.
+
+# Conclusion
+
+From the analysis we can see that there is no statistical significance between the proportion of developed land and both the shannon and simpson indices.
+This result is different from those in other studies, which found significant negative correlations between land use intensity and biodiversity [@millard_global_2021].
+I hypothesize that this difference is due to census places not encapsulating the total diversity of pollinator communities or land use intensity. This
+other study used a categorical variable for land use intensity rather than a proportion of total land so the method I used for measuring land use intensity
+may have been insufficient for finding a significant relationship. Another idea is that Oregon is significantly different from the locations analyzed
+in the other studies. This would require the methods of those other studies to be used in the context of Oregon, and I believe different results will
+be seen if higher resolution data, like raster or vector spatial data from the NLCD, is used instead of census data aggregating data from the NLCD.
+
+# References
